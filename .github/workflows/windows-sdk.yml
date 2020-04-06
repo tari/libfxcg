@@ -27,11 +27,11 @@ jobs:
           cd gcc-src
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
-          ln -s mpfr-4.0.2 ./gcc-9.3.0/mpfr
+          ln -sr mpfr-4.0.2 ./gcc-9.3.0/mpfr
           curl -L http://ftpmirror.gnu.org/gmp/gmp-6.2.0.tar.xz | tar xJ
-          ln -s gmp-6.2.0 ./gcc-9.3.0/gmp
+          ln -sr gmp-6.2.0 ./gcc-9.3.0/gmp
           curl -L http://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz | tar xz
-          ln -s mpc-1.1.0 ./gcc-9.3.0/mpc
+          ln -sr mpc-1.1.0 ./gcc-9.3.0/mpc
 
       - uses: actions/cache@v1
         id: cache-binaries
