@@ -13,7 +13,7 @@ jobs:
           apt-get -qqy update
           apt-get -qq install build-essential curl mingw-w64 texinfo
       - name: Create GCC directories
-        run: mkdir ${GITHUB_WORKSPACE}/gcc-{src,build,bin}
+        run: mkdir gcc-{src,build,bin}
 
       - uses: actions/cache@v1
         id: cache-sources
@@ -24,7 +24,9 @@ jobs:
       - name: Download GCC sources
         if: steps.cache-sources.outputs.cache-hit != 'true'
         run: |
-          echo ${GITHUB_WORKSPACE} $GITHUB_WORKSPACE
+          echo Workspace is ${GITHUB_WORKSPACE}
+          echo CWD is $(pwd)
+          ls . ${GITHUB_WORKSPACE} gcc-src
           cd ${GITHUB_WORKSPACE}/gcc-src
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
