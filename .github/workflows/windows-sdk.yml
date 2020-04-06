@@ -1,3 +1,4 @@
+name: Build Windows SDK package
 on: push
 
 jobs:
