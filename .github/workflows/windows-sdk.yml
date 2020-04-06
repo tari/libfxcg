@@ -13,7 +13,7 @@ jobs:
           apt-get -qqy update
           apt-get -qq install build-essential curl mingw-w64 texinfo
       - name: Create GCC directories
-        run: mkdir gcc-{src,build,bin}
+        run: mkdir gcc-src gcc-build gcc-bin
 
       - uses: actions/cache@v1
         id: cache-sources
@@ -24,10 +24,7 @@ jobs:
       - name: Download GCC sources
         if: steps.cache-sources.outputs.cache-hit != 'true'
         run: |
-          echo Workspace is ${GITHUB_WORKSPACE}
-          echo CWD is $(pwd)
-          ls . ${GITHUB_WORKSPACE} gcc-src
-          cd ${GITHUB_WORKSPACE}/gcc-src
+          cd gcc-src
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
           ln -s mpfr-4.0.2 ./gcc-9.3.0/mpfr
@@ -45,7 +42,7 @@ jobs:
       - name: Build GCC
         if: steps.cache-binaries.outputs.cache-hit != 'true'
         run: |
-          cd ${GITHUB_WORKSPACE}/gcc-build
+          cd gcc-build
           ../gcc-src/gcc-9.3.0/configure \
               --target=sh3eb-elf --with-endian=big \
               --with-pkgversion=PrizmSDK \
