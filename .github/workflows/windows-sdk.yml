@@ -24,6 +24,7 @@ jobs:
       - name: Download GCC sources
         if: steps.cache-sources.outputs.cache-hit != 'true'
         run: |
+          echo ${GITHUB_WORKSPACE} $GITHUB_WORKSPACE
           cd ${GITHUB_WORKSPACE}/gcc-src
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
