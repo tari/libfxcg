@@ -13,17 +13,17 @@ jobs:
           apt-get -qqy update
           apt-get -qq install build-essential curl mingw-w64 texinfo
       - name: Create GCC directories
-        run: mkdir -p /gcc/{src,build,bin}
+        run: mkdir -p ${{ env.GITHUB_WORKSPACE }}/gcc-{src,build,bin}
 
       - uses: actions/cache@v1
         id: cache-sources
         name: Cache GCC sources
         with:
-          path: /gcc/src
+          path: ${{ env.GITHUB_WORKSPACE }}/gcc-src
           key: gcc-sources-9.3.0
       - name: Download GCC sources
         if: steps.cache-sources.outputs.cache-hit != 'true'
-        working-directory: /gcc/src
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/gcc-src
         run: |
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
@@ -37,13 +37,13 @@ jobs:
         id: cache-binaries
         name: Cache toolchain binaries
         with:
-          path: /gcc/bin
+          path: ${{ env.GITHUB_WORKSPACE }}/gcc-bin
           key: gcc-bin-9.2.0
       - name: Build GCC
         if: steps.cache-binaries.outputs.cache-hit != 'true'
-        working-directory: /gcc/build
+        working-directory: ${{ env.GITHUB_WORKSPACE }}/gcc-build
         run: |
-          ../src/gcc-9.3.0/configure \
+          ../gcc-src/gcc-9.3.0/configure \
               --target=sh3eb-elf --with-endian=big \
               --with-pkgversion=PrizmSDK \
               --host=i686-w64-mingw32 \
@@ -54,10 +54,10 @@ jobs:
               --disable-gcov --disable-libgomp
 
           make -j$(nproc) inhibit_libc=true all-gcc
-          make DESTDIR=/gcc/bin install-gcc
+          make DESTDIR=${GITHUB_WORKSPACE}/gcc-bin install-gcc
 
           make -j$(nproc) inhibit_libc=true all-target-libgcc
-          make DESTDIR=/gcc/bin install-target-libgcc
+          make DESTDIR=${GITHUB_WORKSPACE}/gcc-bin install-target-libgcc
 
       - name: Checkout repository
         uses: actions/checkout@v2
