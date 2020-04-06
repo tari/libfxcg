@@ -3,6 +3,8 @@ on: push
 
 jobs:
   build_compiler:
+    name: Build toolchain
+    runs-on: ubuntu-latest
     container:
       image: docker://docker.pkg.github.com/${{ github.repository }}/toolchain
     steps:
