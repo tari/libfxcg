@@ -12,16 +12,19 @@ jobs:
         run: |
           apt-get -qqy update
           apt-get -qq install build-essential curl mingw-w64 texinfo
+      - name: Create GCC directories
+        run: mkdir -p /gcc/{src,build,bin}
+
       - uses: actions/cache@v1
         id: cache-sources
         name: Cache GCC sources
         with:
-          path: ./gcc-src
+          path: /gcc/src
           key: gcc-sources-9.3.0
-      - name: Download sources
+      - name: Download GCC sources
         if: steps.cache-sources.outputs.cache-hit != 'true'
+        working-directory: /gcc/src
         run: |
-          mkdir gcc-src && cd gcc-src
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
           ln -s mpfr-4.0.2 ./gcc-9.3.0/mpfr
@@ -29,6 +32,33 @@ jobs:
           ln -s gmp-6.2.0 ./gcc-9.3.0/gmp
           curl -L http://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz | tar xz
           ln -s mpc-1.1.0 ./gcc-9.3.0/mpc
+
+      - uses: actions/cache@v1
+        id: cache-binaries
+        name: Cache toolchain binaries
+        with:
+          path: /gcc/bin
+          key: gcc-bin-9.2.0
+      - name: Build GCC
+        if: steps.cache-binaries.outputs.cache-hit != 'true'
+        working-directory: /gcc/build
+        run: |
+          ../src/gcc-9.3.0/configure \
+              --target=sh3eb-elf --with-endian=big \
+              --with-pkgversion=PrizmSDK \
+              --host=i686-w64-mingw32 \
+              --prefix=/ \
+              --without-headers --enable-languages=c,c++ \
+              --disable-tls --disable-nls --disable-threads --disable-shared \
+              --disable-libssp --disable-libvtv --disable-libada \
+              --disable-gcov --disable-libgomp
+
+          make -j$(nproc) inhibit_libc=true all-gcc
+          make DESTDIR=/gcc/bin install-gcc
+
+          make -j$(nproc) inhibit_libc=true all-target-libgcc
+          make DESTDIR=/gcc/bin install-target-libgcc
+
       - name: Checkout repository
         uses: actions/checkout@v2
           #- uses: actions/upload-artifact@v1
