@@ -1,0 +1,35 @@
+on: push
+
+jobs:
+  build_compiler:
+    container:
+      image: docker://docker.pkg.github.com/${{ github.repository }}/toolchain
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v1
+        id: cache-sources
+        name: Cache GCC sources
+        with:
+          path: ./gcc-src
+          key: gcc-sources-9.3.0
+      - name: Download sources
+        if: steps.cache-sources.outputs.cache-hit != 'true'
+        run: |
+          mkdir gcc-src && cd gcc-src
+          curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
+          curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
+          ln -s mpfr-4.0.2 ./gcc-9.3.0/mpfr
+          curl -L http://ftpmirror.gnu.org/gmp/gmp-6.2.0.tar.xz | tar xJ
+          ln -s gmp-6.2.0 ./gcc-9.3.0/gmp
+          curl -L http://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz | tar xz
+          ln -s mpc-1.1.0 ./gcc-9.3.0/mpc
+          #- uses: actions/upload-artifact@v1
+          #  with:
+          #    name: toolchain-windows
+          #    path: /opt/toolchain-windows
+          #  build_libraries:
+          #    container:
+          #      image: docker://docker.pkg.github.com/${GITHUB_REPOSITORY}/toolchain
+          #    steps:
+          #      - uses: actions/checkout@master
+          #      - run: bluh
