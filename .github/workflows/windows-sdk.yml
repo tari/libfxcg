@@ -161,12 +161,32 @@ jobs:
         with:
           name: toolchain-bin-gcc9.3.0
           path: pkg
+      - name: Copy project files
+        run: |
+          cp -r toolchain pkg/toolchain
+          mkdir pkg/projects
+          cp -r examples/skeleton pkg/projects/example
       - uses: actions/upload-artifact@v1
         with:
           name: pkg-win
           path: pkg
-      - run: |
-          cp -r toolchain pkg/toolchain
-          mkdir pkg/projects
-          cp -r examples/skeleton pkg/projects/example
+
+  test:
+    name: Verify package can build G3A
+    runs-on: windows-latest
+    needs: package
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: pkg-win
+          path: prizmsdk
+      - name: Build example project
+        run: |
+          choco install make
+          cd prizmsdk/projects/example
+          make
+      - uses: actions/upload-artifact@v1
+        with:
+          name: testproject-compiled
+          path: prizmsdk/projects/example
 
