@@ -8,6 +8,9 @@ jobs:
     container:
       image: docker://tari/libfxcg-toolchain
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Install packages
         run: |
           apt-get -qqy update
@@ -61,8 +64,6 @@ jobs:
 
           ls -R ${GITHUB_WORKSPACE}/gcc-bin
 
-      - name: Checkout repository
-        uses: actions/checkout@v2
           #- uses: actions/upload-artifact@v1
           #  with:
           #    name: toolchain-windows
