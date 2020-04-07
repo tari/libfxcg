@@ -16,13 +16,24 @@ jobs:
         run: mkdir gcc-src gcc-build gcc-bin
 
       - uses: actions/cache@v1
+        id: cache-binaries
+        name: Cache toolchain binaries
+        with:
+          path: gcc-bin
+          key: gcc-win-9.3.0-${{ github.sha }}
+          restore-keys: |
+            gcc-win-9.3.0-
+      - uses: actions/cache@v1
         id: cache-sources
+        if: steps.cache-binaries.outputs.cache-hit != 'true'
         name: Cache GCC sources
         with:
           path: gcc-src
-          key: gcc-sources-9.3.0
+          key: gcc-src-9.3.0-${{ github.sha }}
+          restore-keys: |
+            gcc-src-9.3.0-
       - name: Download GCC sources
-        if: steps.cache-sources.outputs.cache-hit != 'true'
+        if: steps.cache-binaries.outputs.cache-hit != 'true' && steps.cache-sources.outputs.cache-hit != 'true'
         run: |
           cd gcc-src
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
@@ -33,12 +44,6 @@ jobs:
           curl -L http://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz | tar xz
           ln -sr mpc-1.1.0 ./gcc-9.3.0/mpc
 
-      - uses: actions/cache@v1
-        id: cache-binaries
-        name: Cache toolchain binaries
-        with:
-          path: gcc-bin
-          key: gcc-bin-9.2.0
       - name: Build GCC
         if: steps.cache-binaries.outputs.cache-hit != 'true'
         run: |
