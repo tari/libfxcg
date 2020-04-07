@@ -59,6 +59,8 @@ jobs:
           make -j$(nproc) inhibit_libc=true all-target-libgcc
           make DESTDIR=${GITHUB_WORKSPACE}/gcc-bin install-target-libgcc
 
+          ls -R ${GITHUB_WORKSPACE}/gcc-bin
+
       - name: Checkout repository
         uses: actions/checkout@v2
           #- uses: actions/upload-artifact@v1
