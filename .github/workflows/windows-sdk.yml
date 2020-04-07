@@ -35,6 +35,8 @@ jobs:
       - name: Download GCC sources
         if: steps.cache-binaries.outputs.cache-hit != 'true' && steps.cache-sources.outputs.cache-hit != 'true'
         run: |
+          echo "Binary cache status: ${{ steps.cache-binaries.outputs.cache-hit }}"
+          echo "Source cache status: ${{ steps.cache-sources.outputs.cache-hit }}"
           cd gcc-src
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
