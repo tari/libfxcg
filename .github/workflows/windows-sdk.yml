@@ -2,15 +2,12 @@ name: Build Windows SDK package
 on: push
 
 jobs:
-  build_compiler:
-    name: Build toolchain
+  build_windows_toolchain:
+    name: Build Windows toolchain
     runs-on: ubuntu-latest
     container:
       image: docker://tari/libfxcg-toolchain
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       - name: Install packages
         run: |
           apt-get -qqy update
@@ -22,7 +19,7 @@ jobs:
         id: cache-sources
         name: Cache GCC sources
         with:
-          path: ${{ github.workspace }}/gcc-src
+          path: gcc-src
           key: gcc-sources-9.3.0
       - name: Download GCC sources
         if: steps.cache-sources.outputs.cache-hit != 'true'
@@ -40,7 +37,7 @@ jobs:
         id: cache-binaries
         name: Cache toolchain binaries
         with:
-          path: ${{ github.workspace }}/gcc-bin
+          path: gcc-bin
           key: gcc-bin-9.2.0
       - name: Build GCC
         if: steps.cache-binaries.outputs.cache-hit != 'true'
@@ -62,15 +59,24 @@ jobs:
           make -j$(nproc) inhibit_libc=true all-target-libgcc
           make DESTDIR=${GITHUB_WORKSPACE}/gcc-bin install-target-libgcc
 
-          ls -R ${GITHUB_WORKSPACE}/gcc-bin
+      - uses: actions/upload-artifact@v1
+        with:
+          name: gcc-mingw-w64-bin
+          path: gcc-bin
 
-          #- uses: actions/upload-artifact@v1
-          #  with:
-          #    name: toolchain-windows
-          #    path: /opt/toolchain-windows
-          #  build_libraries:
-          #    container:
-          #      image: docker://docker.pkg.github.com/${GITHUB_REPOSITORY}/toolchain
-          #    steps:
-          #      - uses: actions/checkout@master
-          #      - run: bluh
+  build_libfxcg:
+    name: Build libfxcg
+    runs-on: ubuntu-latest
+    container:
+      image: tari/libfxcg-toolchain
+    steps:
+      - uses: actions/checkout@v2
+      - name: Compile
+        run: |
+          make
+          mkdir dist
+          install -t dist include lib
+      - uses: actions/upload-artifact@v1
+        with:
+          name: libfxcg
+          path: dist
