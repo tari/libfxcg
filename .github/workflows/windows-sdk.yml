@@ -18,11 +18,11 @@ jobs:
         name: Cache toolchain binaries
         with:
           path: toolchain-bin
-          key: toolchain-win-gcc9.3.0
+          key: toolchain-win-gcc9.3.0_binutils2.34
       - uses: actions/cache@v1
         id: cache-sources
         if: steps.cache-binaries.outputs.cache-hit != 'true'
-        name: Cache GCC sources
+        name: Cache toolchain sources
         with:
           path: toolchain-src
           key: toolchain-src-gcc9.3.0
@@ -47,8 +47,8 @@ jobs:
 
           cd toolchain-build/binutils
           ../../toolchain-src/binutils-2.34/configure \
-              --target=sh3eb-elf --disable-nls \
-              --prefix=
+              --target=sh3eb-elf --host=i686-w64-mingw32 \
+              --disable-nls --prefix=
           make -j$(nproc)
           make DESTDIR=${GITHUB_WORKSPACE}/toolchain-bin install
 
