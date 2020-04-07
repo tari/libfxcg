@@ -20,7 +20,7 @@ jobs:
         name: Cache toolchain binaries
         with:
           path: gcc-bin
-          key: gcc-win-9.3.0
+          key: gcc-win-9.3.0-strip
       - uses: actions/cache@v1
         id: cache-sources
         if: steps.cache-binaries.outputs.cache-hit != 'true'
@@ -60,6 +60,8 @@ jobs:
           make -j$(nproc) inhibit_libc=true all-target-libgcc
           make DESTDIR=${GITHUB_WORKSPACE}/gcc-bin install-target-libgcc
 
+          find ../gcc-bin -name '*.exe' -exec i686-w64-mingw32-strip {} \;
+
       - uses: actions/upload-artifact@v1
         with:
           name: gcc-mingw-w64-bin
@@ -81,3 +83,22 @@ jobs:
         with:
           name: libfxcg
           path: dist
+
+  package:
+    name: Assemble package
+    runs-on: ubuntu-latest
+    needs: [build_libfxcg, build_windows_toolchain]
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: libfxcg
+          path: pkg
+      - uses: actions/download-artifact@v1
+        with:
+          name: gcc-mingw-w64-bin
+          path: pkg
+      - uses: actions/upload-artifact@v1
+        with:
+          name: pkg-win
+          path: pkg
+
