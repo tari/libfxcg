@@ -6,32 +6,32 @@ jobs:
     name: Build Windows toolchain
     runs-on: ubuntu-latest
     container:
-      image: docker://tari/libfxcg-toolchain
+      image: tari/libfxcg-toolchain
     steps:
       - name: Install packages
         run: |
           apt-get -qqy update
           apt-get -qq install build-essential curl mingw-w64 texinfo
-      - name: Create GCC directories
-        run: mkdir gcc-src gcc-build gcc-bin
 
       - uses: actions/cache@v1
         id: cache-binaries
         name: Cache toolchain binaries
         with:
-          path: gcc-bin
-          key: gcc-win-9.3.0-strip
+          path: toolchain-bin
+          key: toolchain-win-gcc9.3.0
       - uses: actions/cache@v1
         id: cache-sources
         if: steps.cache-binaries.outputs.cache-hit != 'true'
         name: Cache GCC sources
         with:
-          path: gcc-src
-          key: gcc-src-9.3.0
-      - name: Download GCC sources
+          path: toolchain-src
+          key: toolchain-src-gcc9.3.0
+
+      - name: Download toolchain sources
         if: steps.cache-binaries.outputs.cache-hit != 'true' && steps.cache-sources.outputs.cache-hit != 'true'
         run: |
-          cd gcc-src
+          mkdir toolchain-src && cd toolchain-src
+          curl -L http://ftpmirror.gnu.org/binutils/binutils-2.34.tar.bz2 | tar xj
           curl -L http://ftpmirror.gnu.org/gcc/gcc-9.3.0/gcc-9.3.0.tar.xz | tar xJ
           curl -L http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.xz | tar xJ
           ln -sr mpfr-4.0.2 ./gcc-9.3.0/mpfr
@@ -40,32 +40,42 @@ jobs:
           curl -L http://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz | tar xz
           ln -sr mpc-1.1.0 ./gcc-9.3.0/mpc
 
-      - name: Build GCC
+      - name: Build toolchain
         if: steps.cache-binaries.outputs.cache-hit != 'true'
         run: |
-          cd gcc-build
-          ../gcc-src/gcc-9.3.0/configure \
+          mkdir -p toolchain-build/binutils toolchain-build/gcc toolchain-bin
+
+          cd toolchain-build/binutils
+          ../../toolchain-src/binutils-2.34/configure \
+              --target=sh3eb-elf --disable-nls \
+              --prefix=
+          make -j$(nproc)
+          make DESTDIR=${GITHUB_WORKSPACE}/toolchain-bin install
+
+          cd ../gcc
+          ../../toolchain-src/gcc-9.3.0/configure \
               --target=sh3eb-elf --with-endian=big \
               --with-pkgversion=PrizmSDK \
               --host=i686-w64-mingw32 \
-              --prefix=/ \
+              --prefix= \
               --without-headers --enable-languages=c,c++ \
               --disable-tls --disable-nls --disable-threads --disable-shared \
               --disable-libssp --disable-libvtv --disable-libada \
               --disable-gcov --disable-libgomp
 
           make -j$(nproc) inhibit_libc=true all-gcc
-          make DESTDIR=${GITHUB_WORKSPACE}/gcc-bin install-gcc
+          make DESTDIR=${GITHUB_WORKSPACE}/toolchain-bin install-gcc
 
           make -j$(nproc) inhibit_libc=true all-target-libgcc
-          make DESTDIR=${GITHUB_WORKSPACE}/gcc-bin install-target-libgcc
+          make DESTDIR=${GITHUB_WORKSPACE}/toolchain-bin install-target-libgcc
 
-          find ../gcc-bin -name '*.exe' -exec i686-w64-mingw32-strip {} \;
+          cd ${GITHUB_WORKSPACE}/toolchain-bin
+          find . -name '*.exe' -exec i686-w64-mingw32-strip {} \;
 
       - uses: actions/upload-artifact@v1
         with:
-          name: gcc-mingw-w64-bin
-          path: gcc-bin
+          name: toolchain-bin-gcc9.3.0
+          path: toolchain-bin
 
   build_libfxcg:
     name: Build libfxcg
@@ -95,7 +105,7 @@ jobs:
           path: pkg
       - uses: actions/download-artifact@v1
         with:
-          name: gcc-mingw-w64-bin
+          name: toolchain-bin-gcc9.3.0
           path: pkg
       - uses: actions/upload-artifact@v1
         with:
