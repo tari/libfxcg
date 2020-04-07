@@ -33,4 +33,4 @@ RUN make install-target-libgcc
 
 FROM debian:buster-slim
 COPY --from=gcc /usr/local /usr/local
-RUN apt-get -qq update && apt-get -qqy install make && apt-get -qqy clean
+RUN apt-get -qq update && apt-get -qqy install make libmpc3 && apt-get -qqy clean
