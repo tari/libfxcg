@@ -80,7 +80,7 @@ jobs:
         run: |
           make
           mkdir dist
-          install -t dist include lib
+          cp -r lib include dist
       - uses: actions/upload-artifact@v1
         with:
           name: libfxcg
